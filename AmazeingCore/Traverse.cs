@@ -35,6 +35,37 @@ namespace AmazeingCore
                 Scan_For_Collection_And_Exit_Spots(currentTile);
                 ConsoleLogging.CurrentTile_Info(currentTile, maze);
 
+                if (allPointsPicked)
+                {
+                    if (scoreInBag != 0)
+                    {
+                        // Scores needs to be transferred to Bag
+                        if (_directionToCollectionPoint != null && _directionToCollectionPoint.Count != 0)
+                        {
+                            CollectionBackTrack = true;
+                            currentTile = await BackTrack_Collection();
+                        }
+                    }
+                    else
+                    {
+                        // All Scored already moved to Bag
+                        if (_directionToExit != null && _directionToExit.Count != 0)
+                        {
+                            ExitBackTrack = true;
+                            currentTile = await BackTrack_Exit();
+                        }
+                        else if (_passedDirection != null && _passedDirection.Count != 0)
+                        {
+                            PassedBackTrack = true;
+                            currentTile = await BackTrack_Passed();
+                        }
+                    }
+                }
+                else
+                {
+
+                }
+
             } while (true);
         }
 
@@ -55,7 +86,14 @@ namespace AmazeingCore
             }
         }
 
-        
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Passed() =>
+            await Client.Move(_passedDirection.Pop());
+
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Exit() =>
+            await Client.Move(_directionToExit.Pop());
+
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection() =>
+            await Client.Move(_directionToCollectionPoint.Pop());
 
         /// <summary>
         /// Check if there is a collection or Exit point in approximation of current tile and store pass to them
