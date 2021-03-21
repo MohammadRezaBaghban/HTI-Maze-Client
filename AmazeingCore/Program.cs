@@ -13,6 +13,8 @@ namespace AmazeingCore
         static async Task Main(string[] args)
         {
             await Connection_Initialization();
+            await Print_Client_Info();
+
             var mazeInfo = await client.AllMazes();
 
             var mazeList = mazeInfo.ToList();
@@ -30,6 +32,20 @@ namespace AmazeingCore
             await client.ForgetPlayer();
             Console.WriteLine("About to register client...");
             await client.RegisterPlayer(name: "MohammadReza");
+        }
+
+        public static async Task Print_Client_Info()
+        {
+            var clientInfo = await client.GetPlayerInfo();
+            Console.WriteLine($"\n==== " + $"Client Info ====\n\n" +
+                              $"\tPlayer Id: {clientInfo.PlayerId}\n" +
+                              $"\tPlayer Name: {clientInfo.Name}\n" +
+                              $"\tCurrent Score: {clientInfo.PlayerScore}\n" +
+                              $"\tStatus in Current {clientInfo.Maze??"---"} Maze:\n" +
+                              $"\t\tScore in Hand{clientInfo.MazeScoreInHand}\n" +
+                              $"\t\tScore in Bag{clientInfo.MazeScoreInBag}\n\n"+
+                              "===================== \n"
+                              );
         }
     }
 }
