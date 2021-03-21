@@ -15,7 +15,7 @@ namespace AmazeingCore
         static async Task Main(string[] args)
         {
             await Connection_Initialization();
-            await ConsoleLogging.Print_Client_Info(client);
+            await ConsoleLogging.Client_Info(client);
 
             var mazesList = (await client.AllMazes()).OrderBy(x=>x.TotalTiles).ToList();
 
@@ -26,7 +26,7 @@ namespace AmazeingCore
             });
 
             Console.WriteLine("You have finished all the Mazes:\n");
-            await ConsoleLogging.Print_Client_Info(client);
+            await ConsoleLogging.Client_Info(client);
             await client.ExitMaze();
             Console.ReadLine();
         }
@@ -55,9 +55,10 @@ namespace AmazeingCore
 
             do
             {
-                await Try_Collect_Score(possibleActions);
+                possibleActions = await Try_Collect_Score(possibleActions);
                 await Try_Exit_Maze(possibleActions, maze);
 
+                ConsoleLogging.CurrentTile_Info(possibleActions,maze);
 
             } while (true);
         }
