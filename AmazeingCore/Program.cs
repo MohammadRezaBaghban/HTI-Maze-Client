@@ -9,16 +9,16 @@ namespace AmazeingCore
     {
         private static AmazeingClient client;
         private static Random rand = new Random();
+        private static MazeInfo chosenMaze = null;
 
         static async Task Main(string[] args)
         {
             await Connection_Initialization();
-            await Print_Client_Info();
+            await ConsoleLogging.Print_Client_Info(client);
 
-            var mazeInfo = await client.AllMazes();
+            var mazesList = (await client.AllMazes()).OrderBy(x=>x.TotalTiles).ToList();
+            ConsoleLogging.Print_Mazes_Info(mazesList);
 
-            var mazeList = mazeInfo.ToList();
-            MazeInfo chosenMaze = null;
         }
 
         public static async Task Connection_Initialization()
@@ -34,18 +34,5 @@ namespace AmazeingCore
             await client.RegisterPlayer(name: "MohammadReza");
         }
 
-        public static async Task Print_Client_Info()
-        {
-            var clientInfo = await client.GetPlayerInfo();
-            Console.WriteLine($"\n==== " + $"Client Info ====\n\n" +
-                              $"\tPlayer Id: {clientInfo.PlayerId}\n" +
-                              $"\tPlayer Name: {clientInfo.Name}\n" +
-                              $"\tCurrent Score: {clientInfo.PlayerScore}\n" +
-                              $"\tStatus in Current {clientInfo.Maze??"---"} Maze:\n" +
-                              $"\t\tScore in Hand{clientInfo.MazeScoreInHand}\n" +
-                              $"\t\tScore in Bag{clientInfo.MazeScoreInBag}\n\n"+
-                              "===================== \n"
-                              );
-        }
     }
 }
