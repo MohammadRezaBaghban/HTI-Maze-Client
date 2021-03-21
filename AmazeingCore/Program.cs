@@ -55,10 +55,28 @@ namespace AmazeingCore
 
             do
             {
-                
+                await Try_Collect_Score(possibleActions);
+                await Try_Exit_Maze(possibleActions, maze);
 
 
             } while (true);
+        }
+
+        private static async Task<PossibleActionsAndCurrentScore> Try_Collect_Score(PossibleActionsAndCurrentScore currentTile)
+        {
+            if (!currentTile.CanCollectScoreHere || currentTile.CurrentScoreInHand <= 0) return currentTile;
+            Console.WriteLine($"Score Collection: {currentTile.CurrentScoreInHand} has been moved to your bag");
+            currentTile = await client.CollectScore();
+            return currentTile;
+        }
+
+        private static async Task Try_Exit_Maze(PossibleActionsAndCurrentScore currentTile, MazeInfo maze)
+        {
+            if (currentTile.CurrentScoreInBag == maze.PotentialReward && currentTile.CanExitMazeHere)
+            {
+                Console.WriteLine($"Maze Exit: {maze.Name} with {currentTile.CurrentScoreInBag} score in bag");
+                await client.EnterMaze(maze.Name);
+            }
         }
     }
 }
