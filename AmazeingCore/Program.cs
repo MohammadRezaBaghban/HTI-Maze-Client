@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,8 +18,17 @@ namespace AmazeingCore
             await ConsoleLogging.Print_Client_Info(client);
 
             var mazesList = (await client.AllMazes()).OrderBy(x=>x.TotalTiles).ToList();
-            ConsoleLogging.Print_Mazes_Info(mazesList);
 
+            mazesList.ForEach(async maze =>
+            {
+                ConsoleLogging.Print_Mazes_Info(mazesList);
+                await Traverse_Maze(maze);
+            });
+
+            Console.WriteLine("You have finished all the Mazes:\n");
+            await ConsoleLogging.Print_Client_Info(client);
+            await client.ExitMaze();
+            Console.ReadLine();
         }
 
         public static async Task Connection_Initialization()
@@ -34,5 +44,21 @@ namespace AmazeingCore
             await client.RegisterPlayer(name: "MohammadReza");
         }
 
+        private static async Task Traverse_Maze(MazeInfo maze)
+        {
+            Console.WriteLine($"Enter to maze: {maze.Name} with {maze.TotalTiles} tiles and {maze.PotentialReward} potential rewards.");
+            var passedDirection = new Stack<Direction>();
+            var direction_To_CollectionPoint = new Stack<Direction>();
+            var direction_To_Exit = new Stack<Direction>();
+
+            var possibleActions = await client.EnterMaze(maze.Name);
+
+            do
+            {
+                
+
+
+            } while (true);
+        }
     }
 }
