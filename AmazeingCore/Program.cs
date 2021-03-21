@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AmazeingCore.Helpers;
 
 namespace AmazeingCore
 {
@@ -14,18 +12,24 @@ namespace AmazeingCore
 
         static async Task Main(string[] args)
         {
+            await Connection_Initialization();
+            var mazeInfo = await client.AllMazes();
+
+            var mazeList = mazeInfo.ToList();
+            MazeInfo chosenMaze = null;
+        }
+
+        public static async Task Connection_Initialization()
+        {
             var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("Authorization", "HTI Thanks You [e48a]");
+            var authorization_Key = "HTI Thanks You [e48a]";
+
+            httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
             client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
 
             await client.ForgetPlayer();
-            Console.WriteLine("About to register...");
+            Console.WriteLine("About to register client...");
             await client.RegisterPlayer(name: "MohammadReza");
-
-            var mazeInfo = await client.AllMazes();
-            var mazeList = mazeInfo.ToList();
-
-            MazeInfo chosenMaze = null;
         }
     }
 }
