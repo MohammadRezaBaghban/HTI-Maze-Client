@@ -21,8 +21,8 @@ namespace AmazeingCore
 
             mazesList.ForEach(async maze =>
             {
-                ConsoleLogging.Print_Mazes_Info(mazesList);
-                await Traverse_Maze(maze);
+                ConsoleLogging.Mazes_Info(mazesList);
+                await Traverse.Start(maze);
             });
 
             Console.WriteLine("You have finished all the Mazes:\n");
@@ -38,46 +38,13 @@ namespace AmazeingCore
 
             httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
             client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
+            Traverse.Client = client;
 
             await client.ForgetPlayer();
             Console.WriteLine("About to register client...");
             await client.RegisterPlayer(name: "MohammadReza");
         }
 
-        private static async Task Traverse_Maze(MazeInfo maze)
-        {
-            Console.WriteLine($"Enter to maze: {maze.Name} with {maze.TotalTiles} tiles and {maze.PotentialReward} potential rewards.");
-            var passedDirection = new Stack<Direction>();
-            var direction_To_CollectionPoint = new Stack<Direction>();
-            var direction_To_Exit = new Stack<Direction>();
-
-            var possibleActions = await client.EnterMaze(maze.Name);
-
-            do
-            {
-                possibleActions = await Try_Collect_Score(possibleActions);
-                await Try_Exit_Maze(possibleActions, maze);
-
-                ConsoleLogging.CurrentTile_Info(possibleActions,maze);
-
-            } while (true);
-        }
-
-        private static async Task<PossibleActionsAndCurrentScore> Try_Collect_Score(PossibleActionsAndCurrentScore currentTile)
-        {
-            if (!currentTile.CanCollectScoreHere || currentTile.CurrentScoreInHand <= 0) return currentTile;
-            Console.WriteLine($"Score Collection: {currentTile.CurrentScoreInHand} has been moved to your bag");
-            currentTile = await client.CollectScore();
-            return currentTile;
-        }
-
-        private static async Task Try_Exit_Maze(PossibleActionsAndCurrentScore currentTile, MazeInfo maze)
-        {
-            if (currentTile.CurrentScoreInBag == maze.PotentialReward && currentTile.CanExitMazeHere)
-            {
-                Console.WriteLine($"Maze Exit: {maze.Name} with {currentTile.CurrentScoreInBag} score in bag");
-                await client.EnterMaze(maze.Name);
-            }
-        }
+        
     }
 }
