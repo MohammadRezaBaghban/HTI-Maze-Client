@@ -9,6 +9,7 @@ namespace AmazeingCore
     {
         public static AmazeingClient Client;
         public static Direction Direction = Direction.Up;
+        public static PossibleActionsAndCurrentScore currentTile;
         private static Dictionary<string, Stack<Direction>> _backtrackStacks;
 
         public static async Task Start(MazeInfo maze)
@@ -19,8 +20,9 @@ namespace AmazeingCore
                 {"Collection",new Stack<Direction>()},
                 {"Exit", new Stack<Direction>() },
                 {"Pass",new Stack<Direction>()}
-            };
-            var currentTile = await Client.EnterMaze(maze.Name);
+            }; 
+            
+            currentTile = await Client.EnterMaze(maze.Name);
 
             do
             {
@@ -33,7 +35,6 @@ namespace AmazeingCore
 
                     currentTile = await Scan_For_Collection_And_Exit_Spots(currentTile);
                     if (await Try_Exit_Maze(currentTile, maze)) return;
-                    ConsoleLogging.CurrentTile_Info(currentTile, maze, Direction);
 
                     if (!allPointsPicked)
                     {
@@ -79,13 +80,14 @@ namespace AmazeingCore
                             }
                         }
                     }
+                    ConsoleLogging.CurrentTile_Info(currentTile, maze, Direction);
 
                     //Updating Stacks with taken movement
-                    if (collectionBackTrack == false) _backtrackStacks["Collection"]?.Push(ReverseDirection(Direction));
-                    if (passedBackTrack == false) _backtrackStacks["Pass"].Push(ReverseDirection(Direction));
-                    if (exitBackTrack == false) _backtrackStacks["Exit"]?.Push(ReverseDirection(Direction));
-                    if (currentTile.CanCollectScoreHere) _backtrackStacks["Collection"].Clear();
                     if (currentTile.CanExitMazeHere) _backtrackStacks["Exit"].Clear();
+                    if (currentTile.CanCollectScoreHere) _backtrackStacks["Collection"].Clear();
+                    if (collectionBackTrack == false) _backtrackStacks["Collection"]?.Push(ReverseDirection(Direction));
+                    if (exitBackTrack == false) _backtrackStacks["Exit"]?.Push(ReverseDirection(Direction));
+                    if (passedBackTrack == false) _backtrackStacks["Pass"].Push(ReverseDirection(Direction));
                 }
                 catch (Exception e)
                 {
@@ -161,7 +163,10 @@ namespace AmazeingCore
             try
             {
                 Direction = stack.Pop();
-                return await Client.Move(Direction);
+                var possibleMovements = currentTile.PossibleMoveActions.Select(x => x.Direction).ToList();
+                if(possibleMovements.Contains(Direction))
+                    return await Client.Move(Direction);
+                return await Client.Move(possibleMovements[0]);
             }
             catch (Exception e)
             {

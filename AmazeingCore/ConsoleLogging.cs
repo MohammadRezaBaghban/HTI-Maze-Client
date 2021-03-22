@@ -12,8 +12,8 @@ namespace AmazeingCore
                               $"\tPlayer Name: {clientInfo.Name}\n" +
                               $"\tCurrent Score: {clientInfo.PlayerScore}\n" +
                               $"\tStatus in Current {clientInfo.Maze ?? "---"} Maze:\n" +
-                              $"\t\tScore in Hand{clientInfo.MazeScoreInHand}\n" +
-                              $"\t\tScore in Bag{clientInfo.MazeScoreInBag}\n\n"
+                              $"\t\tScore in Hand: {clientInfo.MazeScoreInHand}\n" +
+                              $"\t\tScore in Bag: {clientInfo.MazeScoreInBag}\n\n"
             );
         }
 
