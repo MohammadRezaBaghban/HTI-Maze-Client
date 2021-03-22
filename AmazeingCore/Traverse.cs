@@ -83,6 +83,14 @@ namespace AmazeingCore
                         }
                     }
                 }
+
+                if (CollectionBackTrack == false) _directionToCollectionPoint?.Push(ReverseDirection(Direction));
+                if (ExitBackTrack == false) _directionToExit?.Push(ReverseDirection(Direction));
+                if (PassedBackTrack == false) _passedDirection.Push(ReverseDirection(Direction));
+
+                if (currentTile.CanExitMazeHere) _directionToExit.Clear();
+                if (currentTile.CanCollectScoreHere) _directionToCollectionPoint.Clear();
+
             } while (true);
         }
 
@@ -111,6 +119,23 @@ namespace AmazeingCore
 
         private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection() =>
             await Client.Move(_directionToCollectionPoint.Pop());
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection()
+        {
+            Direction = _directionToCollectionPoint.Pop();
+            return await Client.Move(Direction);
+        }
+
+        public static Direction ReverseDirection(Direction dr)
+        {
+            return dr switch
+            {
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                Direction.Right => Direction.Left,
+                Direction.Left => Direction.Right,
+                _ => dr
+            };
+        }
 
         /// <summary>
         /// Check if there is a collection or Exit point in approximation of current tile and store pass to them
