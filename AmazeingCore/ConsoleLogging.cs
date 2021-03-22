@@ -58,5 +58,11 @@ namespace AmazeingCore
 
         public static string TileType(PossibleActionsAndCurrentScore tile) =>
             (tile.CanCollectScoreHere) ? "Collection Spot" : (tile.CanExitMazeHere) ? "Exit Spot" : "Normal";
+
+        public static void ExceptionHandler(Exception e, string message) =>
+            Console.WriteLine($"\n\n=====\n" +
+                              $"Exception in {message}" +
+                              $"Message: {e.Message}" +
+                              $"\n=====\n\n");
     }
 }

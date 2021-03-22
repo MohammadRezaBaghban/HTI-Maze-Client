@@ -12,9 +12,17 @@ namespace AmazeingCore
 
         private static async Task Main()
         {
-            await Connection_Initialization();
-            await Traverse_Mazes();
-            Console.ReadLine();
+            try
+            {
+                await Connection_Initialization();
+                await Traverse_Mazes();
+                Console.ReadLine();
+            }
+            catch (Exception e)
+            {
+                ConsoleLogging.ExceptionHandler(e, $"Unknown Upper Level Case");
+            }
+
         }
 
         public static async Task Traverse_Mazes()
@@ -22,8 +30,15 @@ namespace AmazeingCore
             var mazesList = (await _client.AllMazes()).OrderBy(x => x.TotalTiles).ToList();
             foreach (var maze in mazesList)
             {
-                ConsoleLogging.Mazes_Info(mazesList);
-                await Traverse.Start(maze);
+                try
+                {
+                    ConsoleLogging.Mazes_Info(mazesList);
+                    await Traverse.Start(maze);
+                }
+                catch (Exception e)
+                {
+                    ConsoleLogging.ExceptionHandler(e,$"Traversing Maze \"{maze.Name}\"");
+                }
             }
 
             Console.WriteLine("You have finished all the Mazes:\n");
@@ -32,19 +47,26 @@ namespace AmazeingCore
 
         public static async Task Connection_Initialization()
         {
-            var httpClient = new HttpClient();
-            var authorization_Key = "HTI Thanks You [e48a]";
+            try
+            {
+                var httpClient = new HttpClient();
+                var authorization_Key = "HTI Thanks You [e48a]";
 
-            httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
-            _client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
-            Traverse.Client = _client;
+                httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
+                _client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
+                Traverse.Client = _client;
 
-            await _client.ForgetPlayer();
-            await _client.RegisterPlayer(name: "MohammadReza");
-            
-            Console.WriteLine("About to register client...");
-            ConsoleLogging.Client_Info(await ClientInfo());
+                await _client.ForgetPlayer();
+                await _client.RegisterPlayer(name: "MohammadReza");
+
+                Console.WriteLine("About to register client...");
+                ConsoleLogging.Client_Info(await ClientInfo());
+            }
+            catch (Exception e)
+            {
+                ConsoleLogging.ExceptionHandler(e, $"Connection Initialization Phase");
+
+            }
         }
-
     }
 }
