@@ -8,6 +8,7 @@ namespace AmazeingCore
     public static class Traverse
     {
         public static AmazeingClient Client;
+        public static Direction Direction = Direction.Up;
         private static Stack<Direction> _passedDirection;
         private static Stack<Direction> _directionToExit;
         private static Stack<Direction> _directionToCollectionPoint;
@@ -18,7 +19,7 @@ namespace AmazeingCore
             _directionToCollectionPoint = new Stack<Direction>();
             _directionToExit = new Stack<Direction>();
             _passedDirection = new Stack<Direction>();
-            var direction = Direction.Up;
+            Direction = Direction.Up;
 
             var currentTile = await Client.EnterMaze(maze.Name);
 
@@ -31,7 +32,10 @@ namespace AmazeingCore
 
 
                 currentTile = await Try_Collect_Score(currentTile);
-                await Try_Exit_Maze(currentTile, maze);
+                if (await Try_Exit_Maze(currentTile, maze))
+                {
+                    return;
+                }
 
                 Scan_For_Collection_And_Exit_Spots(currentTile);
                 ConsoleLogging.CurrentTile_Info(currentTile, maze);
@@ -46,20 +50,20 @@ namespace AmazeingCore
 
                     if (possibleReward.Count != 0)
                     {
-                        direction = possibleReward[0];
-                        currentTile = await Client.Move(direction);
+                        Direction = possibleReward[0];
+                        currentTile = await Client.Move(Direction);
                     }
                     else
                     {
                         //3rd Priority would be back tracking the passed tiles
-                        direction = _passedDirection.Pop();
-                        currentTile = await Client.Move(direction);
+                        Direction = _passedDirection.Pop();
+                        currentTile = await Client.Move(Direction);
                         PassedBackTrack = true;
                     }
                 }
                 else
                 {
-                    if (scoreInBag != 0)
+                    if (scoreInHand != 0)
                     {
                         // Scores needs to be transferred to Bag
                         if (_directionToCollectionPoint != null && _directionToCollectionPoint.Count != 0)
@@ -102,23 +106,26 @@ namespace AmazeingCore
             return currentTile;
         }
 
-        private static async Task Try_Exit_Maze(PossibleActionsAndCurrentScore currentTile, MazeInfo maze)
+        private static async Task<bool> Try_Exit_Maze(PossibleActionsAndCurrentScore currentTile, MazeInfo maze)
         {
-            if (currentTile.CurrentScoreInBag == maze.PotentialReward && currentTile.CanExitMazeHere)
-            {
-                Console.WriteLine($"Maze Exit: {maze.Name} with {currentTile.CurrentScoreInBag} score in bag");
-                await Client.EnterMaze(maze.Name);
-            }
+            if (currentTile.CurrentScoreInBag != maze.PotentialReward || !currentTile.CanExitMazeHere) return false;
+            Console.WriteLine($"Maze Exit: {maze.Name} with {currentTile.CurrentScoreInBag} score in bag");
+            await Client.ExitMaze();
+            return true;
         }
 
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Passed() =>
-            await Client.Move(_passedDirection.Pop());
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Passed()
+        {
+            Direction = _passedDirection.Pop();
+            return await Client.Move(Direction);
+        }
 
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Exit() =>
-            await Client.Move(_directionToExit.Pop());
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Exit()
+        {
+            Direction = _directionToExit.Pop();
+            return await Client.Move(Direction);
+        }
 
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection() =>
-            await Client.Move(_directionToCollectionPoint.Pop());
         private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection()
         {
             Direction = _directionToCollectionPoint.Pop();

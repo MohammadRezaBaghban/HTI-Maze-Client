@@ -17,18 +17,21 @@ namespace AmazeingCore
             await Connection_Initialization();
             await ConsoleLogging.Client_Info(client);
 
-            var mazesList = (await client.AllMazes()).OrderBy(x=>x.TotalTiles).ToList();
-
-            mazesList.ForEach(async maze =>
-            {
-                ConsoleLogging.Mazes_Info(mazesList);
-                await Traverse.Start(maze);
-            });
+            await Traverse_Mazes();
 
             Console.WriteLine("You have finished all the Mazes:\n");
             await ConsoleLogging.Client_Info(client);
-            await client.ExitMaze();
             Console.ReadLine();
+        }
+
+        public static async Task Traverse_Mazes()
+        {
+            var mazesList = (await client.AllMazes()).OrderBy(x => x.TotalTiles).ToList();
+            foreach (var maze in mazesList)
+            {
+                ConsoleLogging.Mazes_Info(mazesList);
+                await Traverse.Start(maze);
+            }
         }
 
         public static async Task Connection_Initialization()
