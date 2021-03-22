@@ -28,7 +28,7 @@ namespace AmazeingCore
                 var scoreInBag = currentTile.CurrentScoreInBag;
                 var scoreInHand = currentTile.CurrentScoreInHand;
                 var allPointsPicked = maze.PotentialReward == scoreInBag + scoreInHand;
-                bool CollectionBackTrack = false, PassedBackTrack = false, ExitBackTrack = false;
+                bool collectionBackTrack = false, passedBackTrack = false, exitBackTrack = false;
 
 
                 currentTile = await Try_Collect_Score(currentTile);
@@ -56,41 +56,40 @@ namespace AmazeingCore
                     else
                     {
                         //3rd Priority would be back tracking the passed tiles
-                        Direction = _passedDirection.Pop();
-                        currentTile = await Client.Move(Direction);
-                        PassedBackTrack = true;
+                        currentTile = await BackTrack(_passedDirection);
+                        passedBackTrack = true;
                     }
                 }
                 else
                 {
                     if (scoreInHand != 0)
                     {
-                        // Scores needs to be transferred to Bag
+                        // Go Collection Points: Scores needs to be transferred to Bag
                         if (_directionToCollectionPoint != null && _directionToCollectionPoint.Count != 0)
                         {
-                            CollectionBackTrack = true;
-                            currentTile = await BackTrack_Collection();
+                            collectionBackTrack = true;
+                            currentTile = await BackTrack(_directionToCollectionPoint);
                         }
                     }
                     else
                     {
-                        // All Scored already moved to Bag
+                        // Go Exit: All Scored already moved to Bag 
                         if (_directionToExit != null && _directionToExit.Count != 0)
                         {
-                            ExitBackTrack = true;
-                            currentTile = await BackTrack_Exit();
+                            exitBackTrack = true;
+                            currentTile = await BackTrack(_directionToExit);
                         }
                         else if (_passedDirection != null && _passedDirection.Count != 0)
                         {
-                            PassedBackTrack = true;
-                            currentTile = await BackTrack_Passed();
+                            passedBackTrack = true;
+                            currentTile = await BackTrack(_passedDirection);
                         }
                     }
                 }
 
-                if (CollectionBackTrack == false) _directionToCollectionPoint?.Push(ReverseDirection(Direction));
-                if (ExitBackTrack == false) _directionToExit?.Push(ReverseDirection(Direction));
-                if (PassedBackTrack == false) _passedDirection.Push(ReverseDirection(Direction));
+                if (collectionBackTrack == false) _directionToCollectionPoint?.Push(ReverseDirection(Direction));
+                if (exitBackTrack == false) _directionToExit?.Push(ReverseDirection(Direction));
+                if (passedBackTrack == false) _passedDirection.Push(ReverseDirection(Direction));
 
                 if (currentTile.CanExitMazeHere) _directionToExit.Clear();
                 if (currentTile.CanCollectScoreHere) _directionToCollectionPoint.Clear();
@@ -114,27 +113,14 @@ namespace AmazeingCore
             return true;
         }
 
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Passed()
+        private static async Task<PossibleActionsAndCurrentScore> BackTrack(Stack<Direction> stack)
         {
-            Direction = _passedDirection.Pop();
+            Direction = stack.Pop();
             return await Client.Move(Direction);
         }
 
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Exit()
-        {
-            Direction = _directionToExit.Pop();
-            return await Client.Move(Direction);
-        }
-
-        private static async Task<PossibleActionsAndCurrentScore> BackTrack_Collection()
-        {
-            Direction = _directionToCollectionPoint.Pop();
-            return await Client.Move(Direction);
-        }
-
-        public static Direction ReverseDirection(Direction dr)
-        {
-            return dr switch
+        public static Direction ReverseDirection(Direction dr) =>
+            dr switch
             {
                 Direction.Up => Direction.Down,
                 Direction.Down => Direction.Up,
@@ -142,7 +128,6 @@ namespace AmazeingCore
                 Direction.Left => Direction.Right,
                 _ => dr
             };
-        }
 
         /// <summary>
         /// Check if there is a collection or Exit point in approximation of current tile and store pass to them
@@ -165,11 +150,9 @@ namespace AmazeingCore
                 _directionToExit.Push(possibleExit[0]);
             }
 
-            if (possibleCollect.Count != 0)
-            {
-                _directionToCollectionPoint = new Stack<Direction>();
-                _directionToCollectionPoint.Push(possibleCollect[0]);
-            }
+            if (possibleCollect.Count == 0) return;
+            _directionToCollectionPoint = new Stack<Direction>();
+            _directionToCollectionPoint.Push(possibleCollect[0]);
         }
     }
 }
