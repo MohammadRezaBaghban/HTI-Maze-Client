@@ -18,6 +18,7 @@ namespace AmazeingCore
             _directionToCollectionPoint = new Stack<Direction>();
             _directionToExit = new Stack<Direction>();
             _passedDirection = new Stack<Direction>();
+            var direction = Direction.Up;
 
             var currentTile = await Client.EnterMaze(maze.Name);
 
@@ -35,7 +36,28 @@ namespace AmazeingCore
                 Scan_For_Collection_And_Exit_Spots(currentTile);
                 ConsoleLogging.CurrentTile_Info(currentTile, maze);
 
-                if (allPointsPicked)
+                if (!allPointsPicked)
+                {
+                    var possibleReward = currentTile.PossibleMoveActions
+                        .Where(di => di.RewardOnDestination != 0 || !di.HasBeenVisited)
+                        .OrderBy(di => di.RewardOnDestination != 0)
+                        .Select(di => di.Direction)
+                        .ToList();
+
+                    if (possibleReward.Count != 0)
+                    {
+                        direction = possibleReward[0];
+                        currentTile = await Client.Move(direction);
+                    }
+                    else
+                    {
+                        //3rd Priority would be back tracking the passed tiles
+                        direction = _passedDirection.Pop();
+                        currentTile = await Client.Move(direction);
+                        PassedBackTrack = true;
+                    }
+                }
+                else
                 {
                     if (scoreInBag != 0)
                     {
@@ -61,11 +83,6 @@ namespace AmazeingCore
                         }
                     }
                 }
-                else
-                {
-
-                }
-
             } while (true);
         }
 
