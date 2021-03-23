@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -8,46 +7,67 @@ namespace AmazeingCore
 {
     class Program
     {
-        private static AmazeingClient client;
-        private static Random rand = new Random();
-        private static MazeInfo chosenMaze = null;
+        private static AmazeingClient _client;
+        private static async Task<PlayerInfo> ClientInfo() => await _client.GetPlayerInfo();
 
-        static async Task Main(string[] args)
+        private static async Task Main()
         {
-            await Connection_Initialization();
-            await ConsoleLogging.Client_Info(client);
+            try
+            {
+                await Connection_Initialization();
+                await Traverse_Mazes();
+                Console.ReadLine();
+            }
+            catch (Exception e)
+            {
+                ConsoleLogging.ExceptionHandler(e, $"Unknown Upper Level Case");
+            }
 
-            await Traverse_Mazes();
-
-            Console.WriteLine("You have finished all the Mazes:\n");
-            await ConsoleLogging.Client_Info(client);
-            Console.ReadLine();
         }
 
         public static async Task Traverse_Mazes()
         {
-            var mazesList = (await client.AllMazes()).OrderBy(x => x.TotalTiles).ToList();
+            var mazesList = (await _client.AllMazes()).OrderBy(x => x.TotalTiles).ToList();
             foreach (var maze in mazesList)
             {
-                ConsoleLogging.Mazes_Info(mazesList);
-                await Traverse.Start(maze);
+                try
+                {
+                    ConsoleLogging.Mazes_Info(mazesList);
+                    await Traverse.Start(maze);
+                }
+                catch (Exception e)
+                {
+                    ConsoleLogging.ExceptionHandler(e,$"Traversing Maze \"{maze.Name}\"");
+                }
             }
+
+            Console.WriteLine("You have finished all the Mazes:\n");
+            ConsoleLogging.Client_Info(await ClientInfo());
         }
 
         public static async Task Connection_Initialization()
         {
-            var httpClient = new HttpClient();
-            var authorization_Key = "HTI Thanks You [e48a]";
+            try
+            {
+                var httpClient = new HttpClient();
+                var authorization_Key = "HTI Thanks You [e48a]";
 
-            httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
-            client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
-            Traverse.Client = client;
+                httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
+                _client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
+                Traverse.Client = _client;
 
-            await client.ForgetPlayer();
-            Console.WriteLine("About to register client...");
-            await client.RegisterPlayer(name: "MohammadReza");
+                await _client.ForgetPlayer();
+                await _client.RegisterPlayer(name: "MohammadReza");
+
+                Console.WriteLine("About to register client...");
+                ConsoleLogging.Client_Info(await ClientInfo());
+                ConsoleLogging.Client_Info(await ClientInfo());
+            }
+            catch (Exception e)
+            {
+                ConsoleLogging.ExceptionHandler(e, $"Connection Initialization Phase");
+
+            }
         }
-
-        
     }
 }
