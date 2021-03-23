@@ -14,7 +14,7 @@ namespace AmazeingCore
         {
             try
             {
-                Traverse.Client = await Connection_Initialization();
+                Traverse.Client = await Connection_Initialization("MohammadReza");
                 await Traverse_Mazes();
                 Console.ReadLine();
             }
@@ -36,7 +36,7 @@ namespace AmazeingCore
                 }
                 catch (Exception e)
                 {
-                    ConsoleLogging.ExceptionHandler(e,$"Traversing Maze \"{maze.Name}\"");
+                    ConsoleLogging.ExceptionHandler(e, $"Traversing Maze \"{maze.Name}\"");
                 }
             }
 
@@ -44,18 +44,18 @@ namespace AmazeingCore
             ConsoleLogging.Client_Info(await ClientInfo());
         }
 
-        public static async Task<AmazeingClient> Connection_Initialization()
+        public static async Task<AmazeingClient> Connection_Initialization(string playerName, string token = null)
         {
             try
             {
                 var httpClient = new HttpClient();
-                var authorization_Key = "HTI Thanks You [e48a]";
+                var authorization_Key = token ?? "HTI Thanks You [e48a]";
 
                 httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
                 _client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
 
                 await _client.ForgetPlayer();
-                await _client.RegisterPlayer(name: "MohammadReza");
+                await _client.RegisterPlayer(name: playerName);
 
                 Console.WriteLine("About to register client...");
                 ConsoleLogging.Client_Info(await ClientInfo());
