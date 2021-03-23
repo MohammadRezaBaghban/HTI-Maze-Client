@@ -61,6 +61,7 @@ namespace AmazeingCore
 
                 Console.WriteLine("About to register client...");
                 ConsoleLogging.Client_Info(await ClientInfo());
+                ConsoleLogging.Client_Info(await ClientInfo());
             }
             catch (Exception e)
             {

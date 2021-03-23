@@ -9,7 +9,7 @@ namespace AmazeingCore
     {
         public static AmazeingClient Client;
         public static Direction Direction = Direction.Up;
-        public static PossibleActionsAndCurrentScore currentTile;
+        public static PossibleActionsAndCurrentScore CurrentTile;
         private static Dictionary<string, Stack<Direction>> _backtrackStacks;
 
         public static async Task Start(MazeInfo maze)
@@ -20,25 +20,25 @@ namespace AmazeingCore
                 {"Collection",new Stack<Direction>()},
                 {"Exit", new Stack<Direction>() },
                 {"Pass",new Stack<Direction>()}
-            }; 
-            
-            currentTile = await Client.EnterMaze(maze.Name);
+            };
+
+            CurrentTile = await Client.EnterMaze(maze.Name);
 
             do
             {
                 try
                 {
-                    var scoreInBag = currentTile.CurrentScoreInBag;
-                    var scoreInHand = currentTile.CurrentScoreInHand;
+                    var scoreInBag = CurrentTile.CurrentScoreInBag;
+                    var scoreInHand = CurrentTile.CurrentScoreInHand;
                     var allPointsPicked = maze.PotentialReward == scoreInBag + scoreInHand;
                     bool collectionBackTrack = false, passedBackTrack = false, exitBackTrack = false;
 
-                    currentTile = await Scan_For_Collection_And_Exit_Spots(currentTile);
-                    if (await Try_Exit_Maze(currentTile, maze)) return;
+                    CurrentTile = await Scan_For_Collection_And_Exit_Spots(CurrentTile);
+                    if (await Try_Exit_Maze(CurrentTile, maze)) return;
 
                     if (!allPointsPicked)
                     {
-                        var possibleReward = currentTile.PossibleMoveActions
+                        var possibleReward = CurrentTile.PossibleMoveActions
                             .Where(di => di.RewardOnDestination != 0 || !di.HasBeenVisited)
                             .OrderBy(di => di.RewardOnDestination != 0)
                             .Select(di => di.Direction).ToList();
@@ -46,11 +46,11 @@ namespace AmazeingCore
                         if (possibleReward.Count != 0)
                         {
                             Direction = possibleReward[0];
-                            currentTile = await Client.Move(Direction);
+                            CurrentTile = await Client.Move(Direction);
                         }
                         else
                         {
-                            currentTile = await BackTrack(_backtrackStacks["Pass"]);
+                            CurrentTile = await BackTrack(_backtrackStacks["Pass"]);
                             passedBackTrack = true;
                         }
                     }
@@ -62,7 +62,7 @@ namespace AmazeingCore
                             if (_backtrackStacks["Collection"] != null && _backtrackStacks["Collection"].Count != 0)
                             {
                                 collectionBackTrack = true;
-                                currentTile = await BackTrack(_backtrackStacks["Collection"]);
+                                CurrentTile = await BackTrack(_backtrackStacks["Collection"]);
                             }
                         }
                         else
@@ -71,28 +71,29 @@ namespace AmazeingCore
                             if (_backtrackStacks["Exit"] != null && _backtrackStacks["Exit"].Count != 0)
                             {
                                 exitBackTrack = true;
-                                currentTile = await BackTrack(_backtrackStacks["Exit"]);
+                                CurrentTile = await BackTrack(_backtrackStacks["Exit"]);
                             }
                             else if (_backtrackStacks["Pass"] != null && _backtrackStacks["Pass"].Count != 0)
                             {
                                 passedBackTrack = true;
-                                currentTile = await BackTrack(_backtrackStacks["Pass"]);
+                                CurrentTile = await BackTrack(_backtrackStacks["Pass"]);
                             }
                         }
                     }
-                    ConsoleLogging.CurrentTile_Info(currentTile, maze, Direction);
+                    ConsoleLogging.CurrentTile_Info(CurrentTile, maze, Direction);
 
                     //Updating Stacks with taken movement
-                    if (currentTile.CanExitMazeHere) _backtrackStacks["Exit"].Clear();
-                    if (currentTile.CanCollectScoreHere) _backtrackStacks["Collection"].Clear();
+                    if (CurrentTile.CanExitMazeHere) _backtrackStacks["Exit"].Clear();
+                    if (CurrentTile.CanCollectScoreHere) _backtrackStacks["Collection"].Clear();
                     if (collectionBackTrack == false) _backtrackStacks["Collection"]?.Push(ReverseDirection(Direction));
                     if (exitBackTrack == false) _backtrackStacks["Exit"]?.Push(ReverseDirection(Direction));
                     if (passedBackTrack == false) _backtrackStacks["Pass"].Push(ReverseDirection(Direction));
+
                 }
                 catch (Exception e)
                 {
-                    ConsoleLogging.ExceptionHandler(e, $"Trying to Make a move");
-                    currentTile = await BackTrack(_backtrackStacks["Pass"]);
+                    ConsoleLogging.ExceptionHandler(e, "Trying to Make a move");
+                    CurrentTile = await BackTrack(_backtrackStacks["Pass"]);
                 }
             } while (true);
         }
@@ -102,7 +103,7 @@ namespace AmazeingCore
         /// </summary>
         private static async Task<PossibleActionsAndCurrentScore> Scan_For_Collection_And_Exit_Spots(PossibleActionsAndCurrentScore currentTile)
         {
-            currentTile = await Try_Collect_Score(currentTile);
+            currentTile = await Try_Collect_Score();
 
             var possibleExit = currentTile.PossibleMoveActions
                 .Where(di => di.AllowsExit)
@@ -126,28 +127,28 @@ namespace AmazeingCore
             return currentTile;
         }
 
-        private static async Task<PossibleActionsAndCurrentScore> Try_Collect_Score(PossibleActionsAndCurrentScore currentTile)
+        private static async Task<PossibleActionsAndCurrentScore> Try_Collect_Score()
         {
             try
             {
-                if (!currentTile.CanCollectScoreHere || currentTile.CurrentScoreInHand <= 0) return currentTile;
-                Console.WriteLine($"Score Collection: {currentTile.CurrentScoreInHand} has been moved to your bag");
-                currentTile = await Client.CollectScore();
-                return currentTile;
+                if (!CurrentTile.CanCollectScoreHere || CurrentTile.CurrentScoreInHand <= 0) return CurrentTile;
+                Console.WriteLine($"Score Collection: {CurrentTile.CurrentScoreInHand} has been moved to your bag");
+                CurrentTile = await Client.CollectScore();
+                return CurrentTile;
             }
             catch (Exception e)
             {
-                ConsoleLogging.ExceptionHandler(e, $"Trying to Collect score");
-                return currentTile;
+                ConsoleLogging.ExceptionHandler(e, "Trying to Collect score");
+                return CurrentTile;
             }
         }
 
-        private static async Task<bool> Try_Exit_Maze(PossibleActionsAndCurrentScore currentTile, MazeInfo maze)
+        private static async Task<bool> Try_Exit_Maze(PossibleActionsAndCurrentScore tile, MazeInfo maze)
         {
             try
             {
-                if (currentTile.CurrentScoreInBag != maze.PotentialReward || !currentTile.CanExitMazeHere) return false;
-                Console.WriteLine($"Maze Exit: {maze.Name} with {currentTile.CurrentScoreInBag} score in bag");
+                if (tile.CurrentScoreInBag != maze.PotentialReward || !tile.CanExitMazeHere) return false;
+                Console.WriteLine($"Maze Exit: {maze.Name} with {tile.CurrentScoreInBag} score in bag");
                 await Client.ExitMaze();
                 return true;
             }
@@ -163,8 +164,8 @@ namespace AmazeingCore
             try
             {
                 Direction = stack.Pop();
-                var possibleMovements = currentTile.PossibleMoveActions.Select(x => x.Direction).ToList();
-                if(possibleMovements.Contains(Direction))
+                var possibleMovements = CurrentTile.PossibleMoveActions.Select(x => x.Direction).ToList();
+                if (possibleMovements.Contains(Direction))
                     return await Client.Move(Direction);
                 return await Client.Move(possibleMovements[0]);
             }
