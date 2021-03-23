@@ -40,6 +40,21 @@ namespace UnitTests
             Assert.Equal(maze.PotentialReward, playerScore);
         }
 
+        [Fact]
+        public async Task Program_TraverseMazes_AllPointsWouldBeGathered()
+        {
+            //Arrange
+            Traverse.Client = await AmazeingCore.Program.Connection_Initialization("Someone");
+            var mazeList = await Traverse.Client.AllMazes();
 
+
+            //Act
+            var totalScore = mazeList.Sum(x => x.PotentialReward);
+            await Program.Traverse_Mazes();
+            var playerScore = (await Traverse.Client.GetPlayerInfo()).PlayerScore;
+
+            //Asert
+            Assert.Equal(totalScore, playerScore);
+        }
     }
 }
