@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AmazeingCore
 {
-    class Program
+    public class Program
     {
         private static AmazeingClient _client;
         private static async Task<PlayerInfo> ClientInfo() => await _client.GetPlayerInfo();
@@ -14,7 +14,7 @@ namespace AmazeingCore
         {
             try
             {
-                await Connection_Initialization();
+                Traverse.Client = await Connection_Initialization();
                 await Traverse_Mazes();
                 Console.ReadLine();
             }
@@ -22,7 +22,6 @@ namespace AmazeingCore
             {
                 ConsoleLogging.ExceptionHandler(e, $"Unknown Upper Level Case");
             }
-
         }
 
         public static async Task Traverse_Mazes()
@@ -45,7 +44,7 @@ namespace AmazeingCore
             ConsoleLogging.Client_Info(await ClientInfo());
         }
 
-        public static async Task Connection_Initialization()
+        public static async Task<AmazeingClient> Connection_Initialization()
         {
             try
             {
@@ -54,19 +53,18 @@ namespace AmazeingCore
 
                 httpClient.DefaultRequestHeaders.Add("Authorization", authorization_Key);
                 _client = new AmazeingClient("https://maze.hightechict.nl/", httpClient);
-                Traverse.Client = _client;
 
                 await _client.ForgetPlayer();
                 await _client.RegisterPlayer(name: "MohammadReza");
 
                 Console.WriteLine("About to register client...");
                 ConsoleLogging.Client_Info(await ClientInfo());
-                ConsoleLogging.Client_Info(await ClientInfo());
+                return _client;
             }
             catch (Exception e)
             {
                 ConsoleLogging.ExceptionHandler(e, $"Connection Initialization Phase");
-
+                return null;
             }
         }
     }
